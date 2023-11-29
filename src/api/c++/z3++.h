@@ -4243,12 +4243,14 @@ namespace z3 {
         typedef std::function<void(void)> final_eh_t;
         typedef std::function<void(expr const&, expr const&)> eq_eh_t;
         typedef std::function<void(expr const&)> created_eh_t;
+        typedef std::function<void(expr const&)> resolved_eh_t;
         typedef std::function<void(expr, unsigned, bool)> decide_eh_t;
 
         final_eh_t m_final_eh;
         eq_eh_t    m_eq_eh;
         fixed_eh_t m_fixed_eh;
         created_eh_t m_created_eh;
+        created_eh_t m_resolved_eh;
         decide_eh_t m_decide_eh;
         solver*    s;
         context*   c;
@@ -4258,11 +4260,13 @@ namespace z3 {
 
         struct scoped_cb {
             user_propagator_base& p;
+            Z3_solver_callback reset;
             scoped_cb(void* _p, Z3_solver_callback cb):p(*static_cast<user_propagator_base*>(_p)) {
+                reset = p.cb;
                 p.cb = cb;
             }
             ~scoped_cb() {
-                p.cb = nullptr;
+                p.cb = reset;
             }
         };
 
@@ -4311,7 +4315,14 @@ namespace z3 {
             expr e(p->ctx(), _e);
             p->m_created_eh(e);
         }
-        
+
+        static void resolved_eh(void* _p, Z3_solver_callback cb, Z3_ast _e) {
+            user_propagator_base* p = static_cast<user_propagator_base*>(_p);
+            scoped_cb _cb(p, cb);
+            expr e(p->ctx(), _e);
+            p->m_resolved_eh(e);
+        }
+
         static void decide_eh(void* _p, Z3_solver_callback cb, Z3_ast _val, unsigned bit, bool is_pos) {
             user_propagator_base* p = static_cast<user_propagator_base*>(_p);
             scoped_cb _cb(p, cb);
@@ -4416,6 +4427,13 @@ namespace z3 {
             m_created_eh = c;
             if (s) {
                 Z3_solver_propagate_created(ctx(), *s, created_eh);
+            }
+        }
+
+        void register_resolved(resolved_eh_t& c) {
+            m_created_eh = c;
+            if (s) {
+                Z3_solver_propagate_resolved(ctx(), *s, resolved_eh);
             }
         }
 

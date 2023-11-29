@@ -567,6 +567,10 @@ public:
         ensure_euf()->user_propagate_register_created(r);
     }
 
+    void user_propagate_register_resolved(user_propagator::resolved_eh_t& r) override {
+        ensure_euf()->user_propagate_register_resolved(r);
+    }
+
     void user_propagate_register_decide(user_propagator::decide_eh_t& r) override {
         ensure_euf()->user_propagate_register_decide(r);
     }

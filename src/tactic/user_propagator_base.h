@@ -27,6 +27,7 @@ namespace user_propagator {
     typedef std::function<void(void*, callback*, unsigned)>                  pop_eh_t;
     typedef std::function<void(void*, callback*, expr*)>                     created_eh_t;
     typedef std::function<void(void*, callback*, expr*, unsigned, bool)>     decide_eh_t;
+    typedef std::function<void(void*, callback*, expr*)>                     resolved_eh_t;
     typedef std::function<void(void*, expr*, unsigned, unsigned const*, unsigned, expr* const*)>        on_clause_eh_t;
 
     class plugin : public decl_plugin {
@@ -85,6 +86,10 @@ namespace user_propagator {
         }
 
         virtual void user_propagate_register_created(created_eh_t& r) {
+            throw default_exception("user-propagators are only supported on the SMT solver");
+        }
+
+        virtual void user_propagate_register_resolved(resolved_eh_t& r) {
             throw default_exception("user-propagators are only supported on the SMT solver");
         }
 

@@ -1435,6 +1435,7 @@ Z3_DECLARE_CLOSURE(Z3_eq_eh,      void, (void* ctx, Z3_solver_callback cb, Z3_as
 Z3_DECLARE_CLOSURE(Z3_final_eh,   void, (void* ctx, Z3_solver_callback cb));
 Z3_DECLARE_CLOSURE(Z3_created_eh, void, (void* ctx, Z3_solver_callback cb, Z3_ast t));
 Z3_DECLARE_CLOSURE(Z3_decide_eh,  void, (void* ctx, Z3_solver_callback cb, Z3_ast t, unsigned idx, bool phase));
+Z3_DECLARE_CLOSURE(Z3_resolved_eh,  void, (void* ctx, Z3_solver_callback cb, Z3_ast t));
 Z3_DECLARE_CLOSURE(Z3_on_clause_eh, void, (void* ctx, Z3_ast proof_hint, unsigned n, unsigned const* deps, Z3_ast_vector literals));
 
 
@@ -7133,6 +7134,13 @@ extern "C" {
        def_API('Z3_solver_propagate_created', VOID, (_in(CONTEXT), _in(SOLVER), _fnptr(Z3_created_eh)))
     */
     void Z3_API Z3_solver_propagate_created(Z3_context c, Z3_solver s, Z3_created_eh created_eh);
+
+    /**
+       \brief register a callback when a registered expression is resolved during conflict analysis
+
+       def_API('Z3_solver_propagate_resolved', VOID, (_in(CONTEXT), _in(SOLVER), _fnptr(Z3_resolved_eh)))
+    */
+    void Z3_API Z3_solver_propagate_resolved(Z3_context c, Z3_solver s, Z3_created_eh resolved_eh);
     
     /**
        \brief register a callback when the solver decides to split on a registered expression.

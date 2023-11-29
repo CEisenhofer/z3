@@ -58,6 +58,11 @@ namespace Microsoft.Z3
         public delegate void CreatedEh(Expr term);
 
         /// <summary>
+        /// Delegate type for when a registered term is resolved during conflict analysis
+        /// </summary>
+        public delegate void ResolvedEh(Expr term);
+
+        /// <summary>
         /// Delegate type for callback into solver's branching. The values can be overridden by calling <see cref="NextSplit" />.
         /// </summary>
         /// <param name="term">A bit-vector or Boolean used for branching</param>
@@ -77,6 +82,7 @@ namespace Microsoft.Z3
         EqEh eq_eh;
         EqEh diseq_eh;
         CreatedEh created_eh;
+        ResolvedEh resolved_eh;
         DecideEh decide_eh;
 
         Native.Z3_push_eh push_eh;
@@ -87,8 +93,9 @@ namespace Microsoft.Z3
         Native.Z3_final_eh final_wrapper;
         Native.Z3_eq_eh eq_wrapper;
         Native.Z3_eq_eh diseq_wrapper;
-        Native.Z3_decide_eh decide_wrapper;
         Native.Z3_created_eh created_wrapper;
+        Native.Z3_resolved_eh resolved_wrapper;
+        Native.Z3_decide_eh decide_wrapper;
 
         void Callback(Action fn, Z3_solver_callback cb)
         {
@@ -109,7 +116,6 @@ namespace Microsoft.Z3
                     this.callback = IntPtr.Zero;
             }
         }
-
 
         static void _push(voidp ctx, Z3_solver_callback cb)
         {
@@ -166,6 +172,13 @@ namespace Microsoft.Z3
             var prop = (UserPropagator)GCHandle.FromIntPtr(ctx).Target;
             using var t = Expr.Create(prop.ctx, a);
             prop.Callback(() => prop.created_eh(t), cb);
+        }
+
+        static void _resolved(voidp ctx, Z3_solver_callback cb, Z3_ast a)
+        {
+            var prop = (UserPropagator)GCHandle.FromIntPtr(ctx).Target;
+            using var t = Expr.Create(prop.ctx, a);
+            prop.Callback(() => prop.resolved_eh(t), cb);
         }
 
         static void _decide(voidp ctx, Z3_solver_callback cb, Z3_ast a, uint idx, bool phase)
@@ -345,6 +358,20 @@ namespace Microsoft.Z3
                 this.created_eh = value;
                 if (solver != null)
                     Native.Z3_solver_propagate_created(ctx.nCtx, solver.NativeObject, created_wrapper);
+            }
+        }
+
+        /// <summary>
+        /// Set resolved callback
+        /// </summary>
+        public ResolvedEh Resolved
+        {
+            set
+            {
+                this.resolved_wrapper = _resolved;
+                this.resolved_eh = value;
+                if (solver != null)
+                    Native.Z3_solver_propagate_resolved(ctx.nCtx, solver.NativeObject, resolved_wrapper);
             }
         }
 

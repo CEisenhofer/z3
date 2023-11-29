@@ -322,6 +322,7 @@ public:
     user_propagator::eq_eh_t    m_eq_eh;
     user_propagator::eq_eh_t    m_diseq_eh;
     user_propagator::created_eh_t m_created_eh;
+    user_propagator::resolved_eh_t m_resolved_eh;
     user_propagator::decide_eh_t m_decide_eh;
     void* m_on_clause_ctx = nullptr;
     user_propagator::on_clause_eh_t m_on_clause_eh;
@@ -335,12 +336,13 @@ public:
         if (!m_user_ctx)
             return;
         m_ctx->user_propagate_init(m_user_ctx, m_push_eh, m_pop_eh, m_fresh_eh);
-        if (m_fixed_eh)   m_ctx->user_propagate_register_fixed(m_fixed_eh);
-        if (m_final_eh)   m_ctx->user_propagate_register_final(m_final_eh);
-        if (m_eq_eh)      m_ctx->user_propagate_register_eq(m_eq_eh);
-        if (m_diseq_eh)   m_ctx->user_propagate_register_diseq(m_diseq_eh);
-        if (m_created_eh) m_ctx->user_propagate_register_created(m_created_eh);
-        if (m_decide_eh) m_ctx->user_propagate_register_decide(m_decide_eh);
+        if (m_fixed_eh)    m_ctx->user_propagate_register_fixed(m_fixed_eh);
+        if (m_final_eh)    m_ctx->user_propagate_register_final(m_final_eh);
+        if (m_eq_eh)       m_ctx->user_propagate_register_eq(m_eq_eh);
+        if (m_diseq_eh)    m_ctx->user_propagate_register_diseq(m_diseq_eh);
+        if (m_created_eh)  m_ctx->user_propagate_register_created(m_created_eh);
+        if (m_resolved_eh) m_ctx->user_propagate_register_resolved(m_resolved_eh);
+        if (m_decide_eh)   m_ctx->user_propagate_register_decide(m_decide_eh);
 
         for (expr* v : m_vars) 
             m_ctx->user_propagate_register_expr(v);
@@ -354,6 +356,7 @@ public:
         m_eq_eh = nullptr;
         m_diseq_eh = nullptr;
         m_created_eh = nullptr;
+        m_resolved_eh = nullptr;
         m_decide_eh = nullptr;
         m_on_clause_eh = nullptr;
         m_on_clause_ctx = nullptr;
@@ -399,7 +402,11 @@ public:
     void user_propagate_register_created(user_propagator::created_eh_t& created_eh) override {
         m_created_eh = created_eh;
     }
-    
+
+    void user_propagate_register_resolved(user_propagator::resolved_eh_t& resolved_eh) override {
+        m_resolved_eh = resolved_eh;
+    }
+
     void user_propagate_register_decide(user_propagator::decide_eh_t& decide_eh) override {
         m_decide_eh = decide_eh;
     }

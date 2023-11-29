@@ -363,34 +363,38 @@ public:
         m_solver2->user_propagate_init(ctx, push_eh, pop_eh, fresh_eh);
     }        
     
-    void user_propagate_register_fixed(user_propagator::fixed_eh_t& fixed_eh) override {
-        m_solver2->user_propagate_register_fixed(fixed_eh);
+    void user_propagate_register_fixed(user_propagator::fixed_eh_t& c) override {
+        m_solver2->user_propagate_register_fixed(c);
     }
     
-    void user_propagate_register_final(user_propagator::final_eh_t& final_eh) override {
-        m_solver2->user_propagate_register_final(final_eh);
+    void user_propagate_register_final(user_propagator::final_eh_t& c) override {
+        m_solver2->user_propagate_register_final(c);
     }
     
-    void user_propagate_register_eq(user_propagator::eq_eh_t& eq_eh) override {
-        m_solver2->user_propagate_register_eq(eq_eh);
+    void user_propagate_register_eq(user_propagator::eq_eh_t& c) override {
+        m_solver2->user_propagate_register_eq(c);
     }
     
-    void user_propagate_register_diseq(user_propagator::eq_eh_t& diseq_eh) override {
-        m_solver2->user_propagate_register_diseq(diseq_eh);
+    void user_propagate_register_diseq(user_propagator::eq_eh_t& c) override {
+        m_solver2->user_propagate_register_diseq(c);
     }
     
     void user_propagate_register_expr(expr* e) override {
         m_solver2->user_propagate_register_expr(e);
     }
     
-    void user_propagate_register_created(user_propagator::created_eh_t& r) override {
-        m_solver2->user_propagate_register_created(r);
+    void user_propagate_register_created(user_propagator::created_eh_t& c) override {
+        m_solver2->user_propagate_register_created(c);
     }
-    
-    void user_propagate_register_decide(user_propagator::decide_eh_t& r) override {
-        m_solver2->user_propagate_register_decide(r);
+
+    void user_propagate_register_resolved(user_propagator::resolved_eh_t& c) override {
+        m_solver2->user_propagate_register_resolved(c);
     }
-    
+
+    void user_propagate_register_decide(user_propagator::decide_eh_t& c) override {
+        m_solver2->user_propagate_register_decide(c);
+    }
+
     void user_propagate_clear() override {
         m_solver2->user_propagate_clear();
     }

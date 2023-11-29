@@ -429,7 +429,8 @@ def mk_dotnet(dotnet):
         sig = sig.replace("unsigned const*","uint[]")
         sig = sig.replace("void*","voidp").replace("unsigned","uint")
         sig = sig.replace("Z3_ast*","ref IntPtr").replace("uint*","ref uint").replace("Z3_lbool*","ref int")
-        ret = ret.replace("void*","voidp").replace("unsigned","uint")        
+        sig = sig.replace("bool","[MarshalAs(UnmanagedType.I1)] bool")
+        ret = ret.replace("void*","voidp").replace("unsigned","uint")
         if "*" in sig or "*" in ret:
             continue
         dotnet.write('        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]\n')
@@ -1895,10 +1896,10 @@ if _lib is None:
   print("  - to the custom Z3_LIB_DIRS Python-builtin before importing the z3 module, e.g. via")
   if sys.version < '3':
     print("    import __builtin__")
-    print("    __builtin__.Z3_LIB_DIRS = [ '/path/to/z3/lib/dir' ] \# directory containing libz3.%s" % _ext)
+    print("    __builtin__.Z3_LIB_DIRS = [ '/path/to/z3/lib/dir' ] # directory containing libz3.%s" % _ext)
   else:
     print("    import builtins")
-    print("    builtins.Z3_LIB_DIRS = [ '/path/to/z3/lib/dir' ] \# directory containing libz3.%s" % _ext)
+    print("    builtins.Z3_LIB_DIRS = [ '/path/to/z3/lib/dir' ] # directory containing libz3.%s" % _ext)
   print(_failures)
   raise Z3Exception("libz3.%s not found." % _ext)
 

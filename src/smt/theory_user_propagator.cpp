@@ -111,14 +111,14 @@ bool theory_user_propagator::next_split_cb(expr* e, unsigned idx, lbool phase) {
         m_next_split_var = nullptr;
         return true;
     }
-    if (!ctx.e_internalized(e)) {
-        // We may not eagerly internalize it (might crash when done in pop) => delay
-        m_next_split_var = e;
-        return true;
+    if (check_defined(e)) {
+        theory_var v = expr2var(e);
+        enode* n = get_enode(v);
+        bool_var b = enode_to_bool(n, idx);
+        if (b == null_bool_var || ctx.get_assignment(b) != l_undef)
+            return false;
     }
-    bool_var b = enode_to_bool(ctx.get_enode(e), idx);
-    if (b == null_bool_var || ctx.get_assignment(b) != l_undef)
-        return false;
+    // We may not eagerly internalize it (might crash when done in pop) => delay
     m_next_split_var = e;
     m_next_split_idx = idx;
     m_next_split_phase = phase;
@@ -201,7 +201,7 @@ void theory_user_propagator::decide(bool_var& var, bool& is_pos) {
     if (!d.is_enode() && !d.is_theory_atom())
         return;
 
-    enode* original_enode = nullptr;
+    enode* original_enode;
     unsigned original_bit = 0;
     bv_util bv(m);
     theory* th = nullptr;
@@ -257,17 +257,19 @@ void theory_user_propagator::decide(bool_var& var, bool& is_pos) {
 }
 
 bool theory_user_propagator::get_case_split(bool_var& var, bool& is_pos) {
-    if (m_next_split_var == nullptr)
+    if (m_next_split_var == nullptr || !check_defined(m_next_split_var))
         return false;
-    ensure_enode(m_next_split_var);
-    bool_var b = enode_to_bool(ctx.get_enode(m_next_split_var), m_next_split_idx);
-    if (b == null_bool_var || ctx.get_assignment(b) != l_undef)
-        return false;
-    var = b;
-    is_pos = ctx.guess(var, m_next_split_phase);
+    theory_var v = expr2var(m_next_split_var);
+    enode* n = get_enode(v);
+    bool_var b = enode_to_bool(n, m_next_split_idx);
+    lbool next_split_phase = m_next_split_phase;
     m_next_split_var = nullptr;
     m_next_split_idx = 0;
     m_next_split_phase = l_undef;
+    if (b == null_bool_var || ctx.get_assignment(b) != l_undef)
+        return false;
+    var = b;
+    is_pos = ctx.guess(var, next_split_phase);
     return true;
 }
 
@@ -416,9 +418,24 @@ bool theory_user_propagator::internalize_term(app* term) {
     return true;
 }
 
+void theory_user_propagator::conflict_resolution_eh(app *atom, bool_var v) {
+    if (!m_resolved_eh)
+        return;
+    SASSERT(ctx.has_enode(v));
+    enode * n = ctx.bool_var2enode(v);
+    theory_var tv = get_th_var(n);
+    if (tv == null_theory_var)
+        return;
+    flet<bool> _pushing(m_push_popping, true);
+    try {
+        m_resolved_eh(m_user_context, this, var2expr(tv));
+    }
+    catch (...) {
+        throw default_exception("Exception thrown in \"resolved\"-callback");
+    }
+}
+
 void theory_user_propagator::collect_statistics(::statistics& st) const {
     st.update("user-propagations", m_stats.m_num_propagations);
     st.update("user-watched", get_num_vars());
 }
-
-

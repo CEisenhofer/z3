@@ -320,6 +320,8 @@ namespace smt {
         
         void user_propagate_register_created(user_propagator::created_eh_t& r);
 
+        void user_propagate_register_resolved(user_propagator::resolved_eh_t& r);
+
         void user_propagate_register_decide(user_propagator::decide_eh_t& r);
 
         /**

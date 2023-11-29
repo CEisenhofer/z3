@@ -1770,6 +1770,12 @@ namespace smt {
             m_user_propagator->register_created(r);
         }
 
+        void user_propagate_register_resolved(user_propagator::resolved_eh_t& r) {
+            if (!m_user_propagator)
+                throw default_exception("user propagator must be initialized");
+            m_user_propagator->register_resolved(r);
+        }
+
         void user_propagate_register_decide(user_propagator::decide_eh_t& r) {
             if (!m_user_propagator)
                 throw default_exception("user propagator must be initialized");

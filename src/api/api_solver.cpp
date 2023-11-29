@@ -1111,6 +1111,14 @@ extern "C" {
         Z3_CATCH;
     }
 
+    void Z3_API Z3_solver_propagate_resolved(Z3_context c, Z3_solver s, Z3_resolved_eh resolved_eh) {
+        Z3_TRY;
+        RESET_ERROR_CODE();
+        user_propagator::resolved_eh_t c = (void(*)(void*, user_propagator::callback*, expr*))resolved_eh;
+        to_solver_ref(s)->user_propagate_register_resolved(c);
+        Z3_CATCH;
+    }
+
     void Z3_API Z3_solver_propagate_decide(Z3_context c, Z3_solver s, Z3_decide_eh decide_eh) {
         Z3_TRY;
         RESET_ERROR_CODE();

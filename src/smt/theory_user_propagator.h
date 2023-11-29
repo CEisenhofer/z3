@@ -65,6 +65,7 @@ namespace smt {
         user_propagator::eq_eh_t        m_eq_eh;
         user_propagator::eq_eh_t        m_diseq_eh;
         user_propagator::created_eh_t   m_created_eh;
+        user_propagator::resolved_eh_t  m_resolved_eh;
         user_propagator::decide_eh_t    m_decide_eh;
 
         user_propagator::context_obj*   m_api_context = nullptr;
@@ -88,17 +89,20 @@ namespace smt {
         lbool                  m_next_split_phase = l_undef;
 
         expr* var2expr(theory_var v) { return m_var2expr.get(v); }
-        theory_var expr2var(expr* e) { check_defined(e); return m_expr2var[e->get_id()]; }
-        void check_defined(expr* e) {
-            if (e->get_id() >= m_expr2var.size() || get_num_vars() <= m_expr2var[e->get_id()])
+        theory_var expr2var(expr* e) {
+            if (!check_defined(e))
                 throw default_exception("expression is not registered");
+            return m_expr2var[e->get_id()];
+        }
+        bool check_defined(expr* e) {
+            return e->get_id() < m_expr2var.size() && get_num_vars() > m_expr2var[e->get_id()];
         }
 
         void force_push();
 
         void propagate_consequence(prop_info const& prop);
         void propagate_new_fixed(prop_info const& prop);
-        
+
         bool_var enode_to_bool(enode* n, unsigned bit);
 
     public:
@@ -110,7 +114,7 @@ namespace smt {
          * \brief initial setup for user propagator.
          */
         void add(
-            void*                 ctx, 
+            void*                 ctx,
             user_propagator::push_eh_t&    push_eh,
             user_propagator::pop_eh_t&     pop_eh,
             user_propagator::fresh_eh_t&   fresh_eh) {
@@ -127,6 +131,7 @@ namespace smt {
         void register_eq(user_propagator::eq_eh_t& eq_eh) { m_eq_eh = eq_eh; }
         void register_diseq(user_propagator::eq_eh_t& diseq_eh) { m_diseq_eh = diseq_eh; }
         void register_created(user_propagator::created_eh_t& created_eh) { m_created_eh = created_eh; }
+        void register_resolved(user_propagator::resolved_eh_t& resolved_eh) { m_resolved_eh = resolved_eh; }
         void register_decide(user_propagator::decide_eh_t& decide_eh) { m_decide_eh = decide_eh; }
 
         bool has_fixed() const { return (bool)m_fixed_eh; }
@@ -153,6 +158,7 @@ namespace smt {
         void init_search_eh() override {}
         void push_scope_eh() override;
         void pop_scope_eh(unsigned num_scopes) override;
+        void conflict_resolution_eh(app *atom, bool_var v) override;
         void restart_eh() override {}
         void collect_statistics(::statistics & st) const override;
         model_value_proc * mk_value(enode * n, model_generator & mg) override { return nullptr; }

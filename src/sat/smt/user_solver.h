@@ -65,6 +65,7 @@ namespace user_solver {
         user_propagator::eq_eh_t        m_eq_eh = nullptr;
         user_propagator::eq_eh_t        m_diseq_eh = nullptr;
         user_propagator::created_eh_t   m_created_eh = nullptr;
+        user_propagator::resolved_eh_t  m_resolved_eh = nullptr;
         user_propagator::decide_eh_t    m_decide_eh = nullptr;
         user_propagator::context_obj*   m_api_context = nullptr;
         unsigned                        m_qhead = 0;
@@ -131,6 +132,10 @@ namespace user_solver {
         void register_eq(user_propagator::eq_eh_t& eq_eh) { m_eq_eh = eq_eh; }
         void register_diseq(user_propagator::eq_eh_t& diseq_eh) { m_diseq_eh = diseq_eh; }
         void register_created(user_propagator::created_eh_t& created_eh) { m_created_eh = created_eh; }
+        void register_resolved(user_propagator::resolved_eh_t& resolved_eh) {
+            m_resolved_eh = resolved_eh;
+            throw default_exception("\"resolved\" callback not yet supported in the new core");
+        }
         void register_decide(user_propagator::decide_eh_t& decide_eh) { m_decide_eh = decide_eh; }
 
         bool has_fixed() const { return (bool)m_fixed_eh; }
