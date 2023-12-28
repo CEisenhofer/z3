@@ -36,7 +36,13 @@ namespace Microsoft.Z3
         /// </summary>
         ~ConstructorList()
         {
-            Native.Z3_del_constructor_list(Context.nCtx, NativeObject);
+            if (Context.nCtx != IntPtr.Zero) {
+                lock (Context)
+            	{
+                    if (Context.nCtx != IntPtr.Zero)
+                        Native.Z3_del_constructor_list(Context.nCtx, NativeObject);
+                }
+            }
         }
 
         #region Internal
