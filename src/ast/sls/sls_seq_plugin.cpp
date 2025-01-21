@@ -199,7 +199,7 @@ namespace sls {
             }
             if (seq.str.is_last_index(e, x, y) && seq.is_string(x->get_sort())) {
                 // TODO
-                SASSERT(false);
+                NOT_IMPLEMENTED_YET();
             }
             if (seq.str.is_stoi(e, x) && seq.is_string(x->get_sort())) {
                 auto sx = strval0(x);
