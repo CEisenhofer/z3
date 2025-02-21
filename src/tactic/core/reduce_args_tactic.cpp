@@ -469,8 +469,9 @@ public:
 
     void cleanup() override {}
 
-    void user_propagate_register_expr(expr* e) override {
+    expr* user_propagate_register_expr(expr* e) override {
         m_vars.push_back(e);
+        return nullptr;
     }
 
     void user_propagate_clear() override {

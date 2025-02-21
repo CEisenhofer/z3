@@ -1440,6 +1440,7 @@ Z3_DECLARE_CLOSURE(Z3_push_eh,    void, (void* ctx, Z3_solver_callback cb));
 Z3_DECLARE_CLOSURE(Z3_pop_eh,     void, (void* ctx, Z3_solver_callback cb, unsigned num_scopes));
 Z3_DECLARE_CLOSURE(Z3_fresh_eh,   void*, (void* ctx, Z3_context new_context));
 Z3_DECLARE_CLOSURE(Z3_fixed_eh,   void, (void* ctx, Z3_solver_callback cb, Z3_ast t, Z3_ast value));
+Z3_DECLARE_CLOSURE(Z3_order_eh,   void, (void* ctx, Z3_solver_callback cb, Z3_ast e, Z3_ast val, bool sig, bool inf));
 Z3_DECLARE_CLOSURE(Z3_eq_eh,      void, (void* ctx, Z3_solver_callback cb, Z3_ast s, Z3_ast t));
 Z3_DECLARE_CLOSURE(Z3_final_eh,   void, (void* ctx, Z3_solver_callback cb));
 Z3_DECLARE_CLOSURE(Z3_created_eh, void, (void* ctx, Z3_solver_callback cb, Z3_ast t));
@@ -7160,6 +7161,14 @@ extern "C" {
     void Z3_API Z3_solver_propagate_fixed(Z3_context c, Z3_solver s, Z3_fixed_eh fixed_eh);
 
     /**
+       \brief register a callback for when an expression is detected to be arithmetically smaller than another one
+
+       def_API('Z3_solver_propagate_order', VOID, (_in(CONTEXT), _in(SOLVER), _fnptr(Z3_order_eh)))
+     */
+
+    void Z3_API Z3_solver_propagate_order(Z3_context c, Z3_solver s, Z3_order_eh order_eh);
+
+    /**
        \brief register a callback on final check.
        This provides freedom to the propagator to delay actions or implement a branch-and bound solver.
        The final check is invoked when all decision variables have been assigned by the solver.
@@ -7232,10 +7241,10 @@ extern "C" {
        \brief register an expression to propagate on with the solver.
        Only expressions of type Bool and type Bit-Vector can be registered for propagation.
 
-       def_API('Z3_solver_propagate_register', VOID, (_in(CONTEXT), _in(SOLVER), _in(AST)))
+       def_API('Z3_solver_propagate_register', AST, (_in(CONTEXT), _in(SOLVER), _in(AST)))
     */
 
-    void Z3_API Z3_solver_propagate_register(Z3_context c, Z3_solver s, Z3_ast e);   
+    Z3_ast Z3_API Z3_solver_propagate_register(Z3_context c, Z3_solver s, Z3_ast e);
 
     /**
         \brief register an expression to propagate on with the solver.
@@ -7243,9 +7252,9 @@ extern "C" {
         Unlike \ref Z3_solver_propagate_register, this function takes a solver callback context
         as argument. It can be invoked during a callback to register new expressions.
 
-        def_API('Z3_solver_propagate_register_cb', VOID, (_in(CONTEXT), _in(SOLVER_CALLBACK), _in(AST)))
+        def_API('Z3_solver_propagate_register_cb', AST, (_in(CONTEXT), _in(SOLVER_CALLBACK), _in(AST)))
     */
-    void Z3_API Z3_solver_propagate_register_cb(Z3_context c, Z3_solver_callback cb, Z3_ast e);
+    Z3_ast Z3_API Z3_solver_propagate_register_cb(Z3_context c, Z3_solver_callback cb, Z3_ast e);
 
     /**
        \brief propagate a consequence based on fixed values and equalities.       

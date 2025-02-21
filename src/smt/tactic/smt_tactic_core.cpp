@@ -319,6 +319,7 @@ public:
     user_propagator::pop_eh_t   m_pop_eh;
     user_propagator::fresh_eh_t m_fresh_eh;
     user_propagator::fixed_eh_t m_fixed_eh;
+    user_propagator::order_eh_t m_order_eh;
     user_propagator::final_eh_t m_final_eh;
     user_propagator::eq_eh_t    m_eq_eh;
     user_propagator::eq_eh_t    m_diseq_eh;
@@ -337,6 +338,7 @@ public:
             return;
         m_ctx->user_propagate_init(m_user_ctx, m_push_eh, m_pop_eh, m_fresh_eh);
         if (m_fixed_eh)   m_ctx->user_propagate_register_fixed(m_fixed_eh);
+        if (m_order_eh) m_ctx->user_propagate_register_order(m_order_eh);
         if (m_final_eh)   m_ctx->user_propagate_register_final(m_final_eh);
         if (m_eq_eh)      m_ctx->user_propagate_register_eq(m_eq_eh);
         if (m_diseq_eh)   m_ctx->user_propagate_register_diseq(m_diseq_eh);
@@ -383,6 +385,10 @@ public:
         m_fixed_eh = fixed_eh;
     }
 
+    void user_propagate_register_order(user_propagator::order_eh_t& order_eh) override {
+        m_order_eh = order_eh;
+    }
+
     void user_propagate_register_final(user_propagator::final_eh_t& final_eh) override {
         m_final_eh = final_eh;
     }
@@ -395,8 +401,9 @@ public:
         m_diseq_eh = diseq_eh;
     }
 
-    void user_propagate_register_expr(expr* e) override {
+    expr* user_propagate_register_expr(expr* e) override {
         m_vars.push_back(e);
+        return nullptr;
     }
 
     void user_propagate_register_created(user_propagator::created_eh_t& created_eh) override {

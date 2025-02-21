@@ -1779,7 +1779,13 @@ namespace smt {
                 throw default_exception("user propagator must be initialized");
             m_user_propagator->register_fixed(fixed_eh);
         }
-        
+
+        void user_propagate_register_order(user_propagator::order_eh_t& order_eh) {
+            if (!m_user_propagator)
+                throw default_exception("user propagator must be initialized");
+            m_user_propagator->register_order(order_eh);
+        }
+
         void user_propagate_register_eq(user_propagator::eq_eh_t& eq_eh) {
             if (!m_user_propagator) 
                 throw default_exception("user propagator must be initialized");
@@ -1792,10 +1798,10 @@ namespace smt {
             m_user_propagator->register_diseq(diseq_eh);
         }
 
-        void user_propagate_register_expr(expr* e) {
+        expr* user_propagate_register_expr(expr* e) {
             if (!m_user_propagator) 
                 throw default_exception("user propagator must be initialized");
-            m_user_propagator->add_expr(e, true);
+            return m_user_propagator->add_expr(e, true);
         }
 
         void user_propagate_register_created(user_propagator::created_eh_t& r) {
@@ -1814,6 +1820,8 @@ namespace smt {
 
         bool watches_fixed(enode* n) const;
 
+        bool watches_order(enode* n) const;
+
         bool has_split_candidate(bool_var& var, bool& is_pos);
         
         bool decide_user_interference(bool_var& var, bool& is_pos);
@@ -1826,6 +1834,14 @@ namespace smt {
 
         void assign_fixed(enode* n, expr* val, literal explain) {
             assign_fixed(n, val, 1, &explain);
+        }
+
+        void less(enode* e, expr* higher, bool inf) {
+            m_user_propagator->order_eh(e, higher, false, inf);
+        }
+
+        void greater(enode* e, expr* lower, bool inf) {
+            m_user_propagator->order_eh(e, lower, true, inf);
         }
 
         bool is_fixed(enode* n, expr_ref& val, literal_vector& explain);

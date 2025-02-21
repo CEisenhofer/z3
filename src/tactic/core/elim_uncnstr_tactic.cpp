@@ -1018,8 +1018,9 @@ public:
         m_num_elim_apps = 0;
     }
 
-    void user_propagate_register_expr(expr* e) override { 
+    expr* user_propagate_register_expr(expr* e) override {
         m_nonvars.insert(e);
+        return nullptr;
     }
 
     void user_propagate_clear() override {

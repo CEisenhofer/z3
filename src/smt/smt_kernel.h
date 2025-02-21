@@ -313,13 +313,15 @@ namespace smt {
 
         void user_propagate_register_fixed(user_propagator::fixed_eh_t& fixed_eh);
 
+        void user_propagate_register_order(user_propagator::order_eh_t& order_eh);
+
         void user_propagate_register_final(user_propagator::final_eh_t& final_eh);
         
         void user_propagate_register_eq(user_propagator::eq_eh_t& eq_eh);
         
         void user_propagate_register_diseq(user_propagator::eq_eh_t& diseq_eh);
 
-        void user_propagate_register_expr(expr* e);
+        expr* user_propagate_register_expr(expr* e);
         
         void user_propagate_register_created(user_propagator::created_eh_t& r);
 

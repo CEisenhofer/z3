@@ -48,6 +48,11 @@ namespace Microsoft.Z3
         public delegate void FixedEh(Expr term, Expr value);
 
         /// <summary>
+        /// Delegate type for order callback
+        /// </summary>
+        public delegate void OrderEh(Expr e, Expr value, bool greater, bool inf);
+
+        /// <summary>
         /// Delegate type for equality or disequality callback
         /// </summary>                
         public delegate void EqEh(Expr term, Expr value);
@@ -73,6 +78,7 @@ namespace Microsoft.Z3
         Z3_solver_callback callback = IntPtr.Zero;
         int callbackNesting = 0;
         FixedEh fixed_eh;
+        OrderEh order_eh;
         Action final_eh;
         EqEh eq_eh;
         EqEh diseq_eh;
@@ -84,6 +90,7 @@ namespace Microsoft.Z3
         Native.Z3_fresh_eh fresh_eh;
 
         Native.Z3_fixed_eh fixed_wrapper;
+        Native.Z3_order_eh order_wrapper;
         Native.Z3_final_eh final_wrapper;
         Native.Z3_eq_eh eq_wrapper;
         Native.Z3_eq_eh diseq_wrapper;
@@ -137,6 +144,14 @@ namespace Microsoft.Z3
             using var term = Expr.Create(prop.ctx, _term);
             using var value = Expr.Create(prop.ctx, _value);
             prop.Callback(() => prop.fixed_eh(term, value), cb);
+        }
+
+        static void _order(voidp ctx, Z3_solver_callback cb, Z3_ast _e, Z3_ast _value, bool greater, bool inf)
+        {
+            var prop = (UserPropagator)GCHandle.FromIntPtr(ctx).Target;
+            using var term = Expr.Create(prop.ctx, _e);
+            using var value = Expr.Create(prop.ctx, _value);
+            prop.Callback(() => prop.order_eh(term, value, greater, inf), cb);
         }
 
         static void _final(voidp ctx, Z3_solver_callback cb)
@@ -293,6 +308,20 @@ namespace Microsoft.Z3
         }
 
         /// <summary>
+        /// Set order callback
+        /// </summary>
+        public OrderEh Order
+        {
+            set
+            {
+                this.order_wrapper = _order;
+                this.order_eh = value;
+                if (solver != null)
+                    Native.Z3_solver_propagate_order(ctx.nCtx, solver.NativeObject, order_wrapper);
+            }
+        }
+
+        /// <summary>
         /// Set final callback
         /// </summary>
         public Action Final
@@ -381,15 +410,15 @@ namespace Microsoft.Z3
         /// <summary>
         /// Track assignments to a term
         /// </summary>
-        public void Register(Expr term)
+        public Expr Register(Expr term)
         {
             if (this.callback != IntPtr.Zero)
             {
-                Native.Z3_solver_propagate_register_cb(ctx.nCtx, callback, term.NativeObject);
+                return Expr.Create(term.Context, Native.Z3_solver_propagate_register_cb(ctx.nCtx, callback, term.NativeObject));
             }
             else
             {
-                Native.Z3_solver_propagate_register(ctx.nCtx, solver.NativeObject, term.NativeObject);
+                return Expr.Create(term.Context, Native.Z3_solver_propagate_register(ctx.nCtx, solver.NativeObject, term.NativeObject));
             }
         }
     }

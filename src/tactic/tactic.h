@@ -86,7 +86,7 @@ public:
         throw default_exception("tactic does not support user propagation");
     }
 
-    void user_propagate_register_expr(expr* e) override { }
+    expr* user_propagate_register_expr(expr* e) override { return nullptr; }
     virtual char const* name() const = 0;
 
 protected:

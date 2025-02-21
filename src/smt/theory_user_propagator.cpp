@@ -45,40 +45,33 @@ void theory_user_propagator::force_push() {
     }
 }
 
-void theory_user_propagator::add_expr(expr* term, bool ensure_enode) {
+expr* theory_user_propagator::add_expr(expr* term, bool ensure_enode) {
     force_push();
     expr_ref r(m);
-    expr* e = term;
-    ctx.get_rewriter()(e, r);
-    TRACE("user_propagate", tout << "add " << mk_bounded_pp(e, m) << "\n");
-    if (r != e) {
-        r = m.mk_fresh_const("aux-expr", e->get_sort());
-        expr_ref eq(m.mk_eq(r, e), m);
-        ctx.assert_expr(eq);
-        ctx.internalize_assertions();
-        e = r;
-        ctx.mark_as_relevant(eq.get());
-    }
-    enode* n = ensure_enode ? this->ensure_enode(e) : ctx.get_enode(e);
+    ctx.get_rewriter()(term, r);
+    TRACE("user_propagate", tout << "add " << mk_bounded_pp(term, m) << "\n");
+    enode* n = ensure_enode ? this->ensure_enode(r) : ctx.get_enode(r);
     if (is_attached_to_var(n))
-        return;
+        return r;
 
     theory_var v = mk_var(n);
     m_var2expr.reserve(v + 1);
-    m_var2expr[v] = term;
-    m_expr2var.setx(term->get_id(), v, null_theory_var);
+    m_var2expr[v] = r;
+    m_expr2var.setx(r->get_id(), v, null_theory_var);
 
-    if (m.is_bool(e) && !ctx.b_internalized(e)) {
-        bool_var bv = ctx.mk_bool_var(e);
+    if (m.is_bool(r) && !ctx.b_internalized(r)) {
+        bool_var bv = ctx.mk_bool_var(r);
         ctx.set_var_theory(bv, get_id());
         ctx.set_enode_flag(bv, true);
     }
-    SASSERT(!m.is_bool(e) || ctx.b_internalized(e));
+    SASSERT(!m.is_bool(r) || ctx.b_internalized(r));
 
     ctx.attach_th_var(n, this, v);
     literal_vector explain;
-    if (ctx.is_fixed(n, r, explain))
-        m_prop.push_back(prop_info(explain, v, r));
+    expr_ref val(m);
+    if (ctx.is_fixed(n, val, explain))
+        m_prop.push_back(prop_info(explain, v, val));
+    return r;
 }
 
 bool theory_user_propagator::propagate_cb(
@@ -99,11 +92,15 @@ bool theory_user_propagator::propagate_cb(
     return true;
 }
 
-void theory_user_propagator::register_cb(expr* e) {
-    if (m_push_popping)
+expr* theory_user_propagator::register_cb(expr* e) {
+    if (m_push_popping) {
+        expr_ref r(m);
+        ctx.get_rewriter()(e, r);
         m_to_add.push_back(e);
+        return r;
+    }
     else
-        add_expr(e, true);
+        return add_expr(e, true);
 }
 
 bool theory_user_propagator::next_split_cb(expr* e, unsigned idx, lbool phase) {
@@ -116,7 +113,10 @@ bool theory_user_propagator::next_split_cb(expr* e, unsigned idx, lbool phase) {
         m_next_split_var = e;
         return true;
     }
-    bool_var b = enode_to_bool(ctx.get_enode(e), idx);
+    enode* n = ctx.get_enode(e);
+    if (ctx.is_false(n) || ctx.is_true(n))
+        return false;
+    bool_var b = enode_to_bool(n, idx);
     if (b == null_bool_var || ctx.get_assignment(b) != l_undef)
         return false;
     m_next_split_var = e;
@@ -178,6 +178,18 @@ void theory_user_propagator::new_fixed_eh(theory_var v, expr* value, unsigned nu
     }
     catch (...) {
         throw default_exception("Exception thrown in \"fixed\"-callback");
+    }
+}
+
+void theory_user_propagator::order_eh(enode* e, expr* val, bool sig, bool inf) {
+    if (!m_order_eh)
+        return;
+    force_push();
+    try {
+        m_order_eh(m_user_context, this, e->get_expr(), val, sig, inf);
+    }
+    catch (...) {
+        throw default_exception("Exception thrown in \"order\"-callback");
     }
 }
 

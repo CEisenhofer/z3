@@ -10,7 +10,7 @@ namespace user_propagator {
     public:
         virtual ~callback() = default;
         virtual bool propagate_cb(unsigned num_fixed, expr* const* fixed_ids, unsigned num_eqs, expr* const* eq_lhs, expr* const* eq_rhs, expr* conseq) = 0;
-        virtual void register_cb(expr* e) = 0;
+        virtual expr* register_cb(expr* e) = 0;
         virtual bool next_split_cb(expr* e, unsigned idx, lbool phase) = 0;
     };
     
@@ -21,6 +21,7 @@ namespace user_propagator {
     
     typedef std::function<void(void*, callback*)>                            final_eh_t;
     typedef std::function<void(void*, callback*, expr*, expr*)>              fixed_eh_t;
+    typedef std::function<void(void*, callback*, expr*, expr*, bool, bool)>  order_eh_t;
     typedef std::function<void(void*, callback*, expr*, expr*)>              eq_eh_t;
     typedef std::function<void*(void*, ast_manager&, context_obj*&)>         fresh_eh_t;
     typedef std::function<void(void*, callback*)>                            push_eh_t;
@@ -67,6 +68,10 @@ namespace user_propagator {
         virtual void user_propagate_register_fixed(fixed_eh_t& fixed_eh) {
             throw default_exception("user-propagators are only supported on the SMT solver");
         }
+
+        virtual void user_propagate_register_order(order_eh_t & order_eh) {
+            throw default_exception("user-propagators are only supported on the SMT solver");
+        }
         
         virtual void user_propagate_register_final(final_eh_t& final_eh) {
             throw default_exception("user-propagators are only supported on the SMT solver");
@@ -80,7 +85,7 @@ namespace user_propagator {
             throw default_exception("user-propagators are only supported on the SMT solver");
         }
         
-        virtual void user_propagate_register_expr(expr* e) { 
+        virtual expr* user_propagate_register_expr(expr* e) {
             throw default_exception("user-propagators are only supported on the SMT solver");
         }
 

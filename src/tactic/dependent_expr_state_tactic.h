@@ -163,9 +163,10 @@ public:
         m_st.reset();
     }
 
-    void user_propagate_register_expr(expr* e) override {
+    expr* user_propagate_register_expr(expr* e) override {
         freeze(e);
         m_frozen.push_back(e);
+        return nullptr;
     }
 
     void user_propagate_clear() override {

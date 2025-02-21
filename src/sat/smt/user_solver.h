@@ -62,6 +62,7 @@ namespace user_solver {
         user_propagator::fresh_eh_t     m_fresh_eh = nullptr;
         user_propagator::final_eh_t     m_final_eh = nullptr;
         user_propagator::fixed_eh_t     m_fixed_eh = nullptr;
+        user_propagator::order_eh_t     m_order_eh = nullptr;
         user_propagator::eq_eh_t        m_eq_eh = nullptr;
         user_propagator::eq_eh_t        m_diseq_eh = nullptr;
         user_propagator::created_eh_t   m_created_eh = nullptr;
@@ -130,19 +131,21 @@ namespace user_solver {
             m_fresh_eh     = fresh_eh;
         }
 
-        void add_expr(expr* e);
+        expr* add_expr(expr* e);
 
         void register_final(user_propagator::final_eh_t& final_eh) { m_final_eh = final_eh; }
         void register_fixed(user_propagator::fixed_eh_t& fixed_eh) { m_fixed_eh = fixed_eh; }
+        void register_order(user_propagator::order_eh_t& order_eh) { m_order_eh = order_eh; }
         void register_eq(user_propagator::eq_eh_t& eq_eh) { m_eq_eh = eq_eh; }
         void register_diseq(user_propagator::eq_eh_t& diseq_eh) { m_diseq_eh = diseq_eh; }
         void register_created(user_propagator::created_eh_t& created_eh) { m_created_eh = created_eh; }
         void register_decide(user_propagator::decide_eh_t& decide_eh) { m_decide_eh = decide_eh; }
 
         bool has_fixed() const { return (bool)m_fixed_eh; }
+        bool has_order() const { return (bool)m_order_eh; }
 
         bool propagate_cb(unsigned num_fixed, expr* const* fixed_ids, unsigned num_eqs, expr* const* lhs, expr* const* rhs, expr* conseq) override;
-        void register_cb(expr* e) override;
+        expr* register_cb(expr* e) override;
         bool next_split_cb(expr* e, unsigned idx, lbool phase) override;
 
         void new_fixed_eh(euf::theory_var v, expr* value, unsigned num_lits, sat::literal const* jlits);

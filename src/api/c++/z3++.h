@@ -4527,13 +4527,15 @@ namespace z3 {
            correspond to equalities that have been registered during a callback.
          */
 
-        void add(expr const& e) {
+        expr add(expr const& e) {
+            Z3_ast a;
             if (cb)
-                Z3_solver_propagate_register_cb(ctx(), cb, e);
+                a = Z3_solver_propagate_register_cb(ctx(), cb, e);
             else if (s)
-                Z3_solver_propagate_register(ctx(), *s, e);
+                a = Z3_solver_propagate_register(ctx(), *s, e);
             else
                 assert(false);
+            return expr(ctx(), a);
         }
 
         void conflict(expr_vector const& fixed) {

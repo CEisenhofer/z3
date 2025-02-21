@@ -536,6 +536,10 @@ namespace euf {
             check_for_user_propagator();
             m_user_propagator->register_fixed(fixed_eh);
         }
+        void user_propagate_register_order(user_propagator::order_eh_t& order_eh) {
+            check_for_user_propagator();
+            m_user_propagator->register_order(order_eh);
+        }
         void user_propagate_register_eq(user_propagator::eq_eh_t& eq_eh) {
             check_for_user_propagator();
             m_user_propagator->register_eq(eq_eh);
@@ -552,9 +556,9 @@ namespace euf {
             check_for_user_propagator();
             m_user_propagator->register_decide(ceh);
         }
-        void user_propagate_register_expr(expr* e) {
+        expr* user_propagate_register_expr(expr* e) {
             check_for_user_propagator();
-            m_user_propagator->add_expr(e);
+            return m_user_propagator->add_expr(e);
         }
 
         void user_propagate_initialize_value(expr* var, expr* value);

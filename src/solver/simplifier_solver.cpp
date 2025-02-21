@@ -385,10 +385,11 @@ public:
         s->user_propagate_init(ctx, push_eh, pop_eh, fresh_eh);
     }        
     void user_propagate_register_fixed(user_propagator::fixed_eh_t& fixed_eh) override { s->user_propagate_register_fixed(fixed_eh); }    
+    void user_propagate_register_order(user_propagator::order_eh_t& order_eh) override { s->user_propagate_register_order(order_eh); }
     void user_propagate_register_final(user_propagator::final_eh_t& final_eh) override { s->user_propagate_register_final(final_eh); }
     void user_propagate_register_eq(user_propagator::eq_eh_t& eq_eh) override { s->user_propagate_register_eq(eq_eh); }    
     void user_propagate_register_diseq(user_propagator::eq_eh_t& diseq_eh) override { s->user_propagate_register_diseq(diseq_eh); }    
-    void user_propagate_register_expr(expr* e) override { m_preprocess_state.freeze(e);  s->user_propagate_register_expr(e); }
+    expr* user_propagate_register_expr(expr* e) override { m_preprocess_state.freeze(e); return s->user_propagate_register_expr(e); }
     void user_propagate_register_created(user_propagator::created_eh_t& r) override { s->user_propagate_register_created(r); }
     void user_propagate_register_decide(user_propagator::decide_eh_t& r) override { s->user_propagate_register_decide(r); }
     void user_propagate_initialize_value(expr* var, expr* value) override { m_preprocess_state.freeze(var); s->user_propagate_initialize_value(var, value); }

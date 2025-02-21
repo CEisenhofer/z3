@@ -228,6 +228,10 @@ namespace {
             m_context.user_propagate_register_fixed(fixed_eh);
         }
 
+        void user_propagate_register_order(user_propagator::order_eh_t& order_eh) override {
+            m_context.user_propagate_register_order(order_eh);
+        }
+
         void user_propagate_register_final(user_propagator::final_eh_t& final_eh) override {
             m_context.user_propagate_register_final(final_eh);
         }
@@ -240,8 +244,8 @@ namespace {
             m_context.user_propagate_register_diseq(diseq_eh);
         }
 
-        void user_propagate_register_expr(expr* e) override { 
-            m_context.user_propagate_register_expr(e);
+        expr* user_propagate_register_expr(expr* e) override {
+            return m_context.user_propagate_register_expr(e);
         }
 
         void user_propagate_register_created(user_propagator::created_eh_t& c) override {

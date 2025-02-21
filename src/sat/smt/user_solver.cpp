@@ -29,12 +29,12 @@ namespace user_solver {
         dealloc(m_api_context);
     }
 
-    void solver::add_expr(expr* e) {
+    expr* solver::add_expr(expr* e) {
         force_push();
         ctx.internalize(e);
         euf::enode* n = expr2enode(e);
         if (is_attached_to_var(n))
-            return;
+            return e;
         euf::theory_var v = mk_var(n);
         ctx.attach_th_var(n, this, v);
         expr_ref r(m);
@@ -43,6 +43,7 @@ namespace user_solver {
             m_prop.push_back(prop_info(explain, v, r));
             DEBUG_CODE(for (auto lit : explain) VERIFY(s().value(lit) == l_true););
         }
+        return e;
     }
 
     bool solver::propagate_cb(
@@ -60,8 +61,8 @@ namespace user_solver {
         return true;
     }
 
-    void solver::register_cb(expr* e) {
-        add_expr(e);
+    expr* solver::register_cb(expr* e) {
+        return add_expr(e);
     }
 
     bool solver::next_split_cb(expr* e, unsigned idx, lbool phase) {

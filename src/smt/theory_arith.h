@@ -582,7 +582,19 @@ namespace smt {
             return is_free(get_context().get_enode(n)->get_th_var(get_id())); 
         }
         bool is_fixed(theory_var v) const;
-        void set_bound_core(theory_var v, bound * new_bound, bool upper) { m_bounds[static_cast<unsigned>(upper)][v] = new_bound; }
+        void set_bound_core(theory_var v, bound * new_bound, bool upper) {
+            m_bounds[static_cast<unsigned>(upper)][v] = new_bound;
+            enode* n = get_enode(v);
+            if (ctx.watches_order(n)) {
+                const inf_numeral& bound = new_bound->get_value();
+                expr_ref val(m);
+                bool is_finite = to_expr(bound, false, val);
+                if (upper)
+                    ctx.less(n, val, !is_finite);
+                else
+                    ctx.greater(n, val, !is_finite);
+            }
+        }
         void restore_bound(theory_var v, bound * new_bound, bool upper) { set_bound_core(v, new_bound, upper); }
         void restore_nl_propagated_flag(unsigned old_trail_size);
         void set_bound(bound * new_bound, bool upper);
@@ -793,7 +805,7 @@ namespace smt {
         void is_row_useful_for_bound_prop(row const & r, int & lower_idx, int & upper_idx) const;
         unsigned imply_bound_for_monomial(row const & r, int idx, bool lower);
         unsigned imply_bound_for_all_monomials(row const & r, bool lower);
-        void explain_bound(row const & r, int idx, bool lower, inf_numeral & delta, 
+        void explain_bound(row const & r, int idx, bool lower, inf_numeral & delta,
                            antecedents & antecedents);
         unsigned mk_implied_bound(row const & r, unsigned idx, bool lower, theory_var v, bound_kind kind, inf_numeral const & k);
         void assign_bound_literal(literal l, row const & r, unsigned idx, bool lower, inf_numeral & delta);
@@ -945,7 +957,7 @@ namespace smt {
         bool move_to_bound(theory_var x_i, bool inc, unsigned& best_efforts, bool& has_shared);
         bool pick_var_to_leave(
             theory_var x_j, bool inc, numeral & a_ij, 
-            inf_numeral& min_gain, inf_numeral& max_gain, 
+            inf_numeral& min_gain, inf_numeral& max_gain,
             bool& shared, theory_var& x_i);
 
         // -----------------------------------

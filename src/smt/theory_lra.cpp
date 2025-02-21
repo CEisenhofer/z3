@@ -2285,7 +2285,19 @@ public:
         unsigned count = 0;
         for (unsigned i = 0; i < bounds.size(); ++i) {
             api_bound* b = bounds[i];
-            if (ctx().get_assignment(b->get_lit()) != l_undef) 
+            enode* n = get_enode(b->get_var());
+            if (ctx().watches_order(n)) {
+                bool is_inf = !b->get_value().get_infinitesimal().is_zero();
+                if (b->get_bound_kind() == lp_api::lower_t)
+                    ctx().less(n, is_inf ? a.mk_int(0) : b->is_int()
+                                ? a.mk_int(b->get_value())
+                                : a.mk_real(b->get_value()), is_inf);
+                else
+                    ctx().greater(n, is_inf ? a.mk_int(0) : b->is_int()
+                                    ? a.mk_int(b->get_value())
+                                    : a.mk_real(b->get_value()), is_inf);
+            }
+            if (ctx().get_assignment(b->get_lit()) != l_undef)
                 continue;
             literal lit = is_bound_implied(be.kind(), be.m_bound, *b);
             if (lit == null_literal) 

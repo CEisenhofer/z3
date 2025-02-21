@@ -307,6 +307,10 @@ namespace smt {
     void kernel::user_propagate_register_fixed(user_propagator::fixed_eh_t& fixed_eh) {
         m_imp->m_kernel.user_propagate_register_fixed(fixed_eh);
     }
+
+    void kernel::user_propagate_register_order(user_propagator::order_eh_t& order_eh) {
+        m_imp->m_kernel.user_propagate_register_order(order_eh);
+    }
     
     void kernel::user_propagate_register_final(user_propagator::final_eh_t& final_eh) {
         m_imp->m_kernel.user_propagate_register_final(final_eh);
@@ -320,8 +324,8 @@ namespace smt {
         m_imp->m_kernel.user_propagate_register_diseq(diseq_eh);
     }
 
-    void kernel::user_propagate_register_expr(expr* e) {
-        m_imp->m_kernel.user_propagate_register_expr(e);
+    expr* kernel::user_propagate_register_expr(expr* e) {
+        return m_imp->m_kernel.user_propagate_register_expr(e);
     }        
 
     void kernel::user_propagate_register_created(user_propagator::created_eh_t& r) {

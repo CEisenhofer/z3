@@ -212,7 +212,7 @@ namespace smt {
             return;
         }
         ast_translation tr(src_ctx.m, m, false);
-        for (unsigned i = 0; i < src_ctx.m_user_propagator->get_num_vars(); ++i) {
+        for (theory_var i = 0; i < (theory_var)src_ctx.m_user_propagator->get_num_vars(); ++i) {
             app* e = src_ctx.m_user_propagator->get_expr(i);
             m_user_propagator->add_expr(tr(e), true);
         }
@@ -1902,6 +1902,8 @@ namespace smt {
 
         if (!is_pos) l.neg();
         TRACE("decide", tout << "case split " << l << "\n" << "activity: " << get_activity(var) << "\n";);
+        expr_ref v(m);
+        literal2expr(l, v);
         assign(l, b_justification::mk_axiom(), true);
         return true;
     }
@@ -2961,6 +2963,10 @@ namespace smt {
 
     bool context::watches_fixed(enode* n) const {
         return m_user_propagator && m_user_propagator->has_fixed() && n->get_th_var(m_user_propagator->get_family_id()) != null_theory_var;
+    }
+
+    bool context::watches_order(enode* n) const {
+        return m_user_propagator && m_user_propagator->has_order() && n->get_th_var(m_user_propagator->get_family_id()) != null_theory_var;
     }
 
     bool context::has_split_candidate(bool_var& var, bool& is_pos) {
