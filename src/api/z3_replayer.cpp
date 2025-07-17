@@ -806,6 +806,10 @@ uint64_t * z3_replayer::get_uint64_addr(unsigned pos) {
     return m_imp->get_uint64_addr(pos);
 }
 
+bool* z3_replayer::get_bool_addr(unsigned pos) {
+    return (bool*)m_imp->get_int_addr(pos);
+}
+
 Z3_string * z3_replayer::get_str_addr(unsigned pos) {
     return m_imp->get_str_addr(pos);
 }

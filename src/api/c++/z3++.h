@@ -4295,14 +4295,16 @@ namespace z3 {
         typedef std::function<void(expr const&, expr const&)> eq_eh_t;
         typedef std::function<void(expr const&)> created_eh_t;
         typedef std::function<void(expr, unsigned, bool)> decide_eh_t;
+        typedef std::function<void(expr, expr, Z3_bound_kind)> bound_eh_t;
 
-        final_eh_t m_final_eh;
-        eq_eh_t    m_eq_eh;
-        fixed_eh_t m_fixed_eh;
+        final_eh_t   m_final_eh;
+        eq_eh_t      m_eq_eh;
+        fixed_eh_t   m_fixed_eh;
         created_eh_t m_created_eh;
-        decide_eh_t m_decide_eh;
-        solver*    s;
-        context*   c;
+        decide_eh_t  m_decide_eh;
+        bound_eh_t   m_bound_eh;
+        solver*      s;
+        context*     c;
         std::vector<z3::context*> subcontexts;
 
         unsigned   m_callbackNesting = 0;
@@ -4372,7 +4374,15 @@ namespace z3 {
             expr val(p->ctx(), _val);
             p->m_decide_eh(val, bit, is_pos);
         }
-        
+
+        static void bound_eh(void* _p, Z3_solver_callback cb, Z3_ast _var, Z3_ast _value, Z3_bound_kind kind) {
+            user_propagator_base* p = static_cast<user_propagator_base*>(_p);
+            scoped_cb _cb(p, cb);
+            expr value(p->ctx(), _value);
+            expr var(p->ctx(), _var);
+            p->m_bound_eh(var, value, kind);
+        }
+
     public:
         user_propagator_base(context& c) : s(nullptr), c(&c) {}
         
@@ -4423,6 +4433,22 @@ namespace z3 {
             };
             if (s) {
                 Z3_solver_propagate_fixed(ctx(), *s, fixed_eh);
+            }
+        }
+
+        void register_bound(bound_eh_t& f) {
+            m_bound_eh = f;
+            if (s) {
+                Z3_solver_propagate_bound(ctx(), *s, bound_eh);
+            }
+        }
+
+        void register_bound() {
+            m_bound_eh = [this](expr const &id, expr const &e, Z3_bound_kind kind) {
+                bound(id, e, kind);
+            };
+            if (s) {
+                Z3_solver_propagate_bound(ctx(), *s, bound_eh);
             }
         }
 
@@ -4508,9 +4534,29 @@ namespace z3 {
         
         virtual void decide(expr const& /*val*/, unsigned /*bit*/, bool /*is_pos*/) {}
 
+        virtual void bound(expr const& /*id*/, expr const& /*e*/, Z3_bound_kind /*kind*/) {}
+
         bool next_split(expr const& e, unsigned idx, Z3_lbool phase) {
             assert(cb);
             return Z3_solver_next_split(ctx(), cb, e, idx, phase);
+        }
+
+        bool get_lower_bound(expr const& e, expr& val, bool& is_strict) {
+            assert(cb);
+            Z3_ast _val = Z3_solver_get_lower_bound(ctx(), cb, e, &is_strict);
+            if (!_val)
+                return false;
+            val = expr(ctx(), _val);
+            return true;
+        }
+
+        bool get_upper_bound(expr const& e, expr& val, bool& is_strict) {
+            assert(cb);
+            Z3_ast _val = Z3_solver_get_upper_bound(ctx(), cb, e, &is_strict);
+            if (!_val)
+                return false;
+            val = expr(ctx(), _val);
+            return true;
         }
 
         /**

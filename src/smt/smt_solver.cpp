@@ -228,6 +228,10 @@ namespace {
             m_context.user_propagate_register_fixed(fixed_eh);
         }
 
+        void user_propagate_register_bound(user_propagator::bound_eh_t& bound_eh) override {
+            m_context.user_propagate_register_bound(bound_eh);
+        }
+
         void user_propagate_register_final(user_propagator::final_eh_t& final_eh) override {
             m_context.user_propagate_register_final(final_eh);
         }

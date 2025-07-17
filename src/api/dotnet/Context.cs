@@ -691,15 +691,52 @@ namespace Microsoft.Z3
             return new FuncDecl(this, prefix, null, range);
         }
 
-	/// <summary>
-	/// Declare a function to be processed by the user propagator plugin.
-	/// </summary>               
-	public FuncDecl MkUserPropagatorFuncDecl(string name, Sort[] domain, Sort range) 
-	{
-             using var _name = MkSymbol(name);
-             var fn = Native.Z3_solver_propagate_declare(nCtx, _name.NativeObject, AST.ArrayLength(domain), AST.ArrayToNative(domain), range.NativeObject);
-             return new FuncDecl(this, fn);
-	}
+        /// <summary>
+        /// Declare a function to be processed by the user propagator plugin.
+        /// </summary>
+        public FuncDecl MkUserPropagatorFuncDecl(string name, Sort[] domain, Sort range)
+        {
+            using var _name = MkSymbol(name);
+            var fn = Native.Z3_solver_propagate_declare(nCtx, _name.NativeObject, AST.ArrayLength(domain), AST.ArrayToNative(domain), range.NativeObject);
+            return new FuncDecl(this, fn);
+        }
+
+        /// <summary>
+        ///  Creates a linear ordering relation over signature <paramref name="s"/>. The relation is identified by the index <paramref name="id"/>.
+        /// </summary>
+        public FuncDecl MkLinearOrder(Sort s, uint id)
+        {
+            var fn = Native.Z3_mk_linear_order(nCtx, s.NativeObject, id);
+            return new FuncDecl(this, fn);
+        }
+
+        /// <summary>
+        ///  Creates a partial ordering relation over signature <paramref name="s"/>. The relation is identified by the index <paramref name="id"/>.
+        /// </summary>
+        public FuncDecl MkPartialOrder(Sort s, uint id)
+        {
+            var fn = Native.Z3_mk_partial_order(nCtx, s.NativeObject, id);
+            return new FuncDecl(this, fn);
+        }
+
+        /// <summary>
+        ///  Creates a piecewise linear ordering relation over signature <paramref name="s"/>. The relation is identified by the index <paramref name="id"/>.
+        /// </summary>
+        public FuncDecl MkPiecewiseLinearOrder(Sort s, uint id)
+        {
+            var fn = Native.Z3_mk_piecewise_linear_order(nCtx, s.NativeObject, id);
+            return new FuncDecl(this, fn);
+        }
+
+        /// <summary>
+        ///  Creates a tree ordering relation over signature <paramref name="s"/>. The relation is identified by the index <paramref name="id"/>.
+        /// </summary>
+        public FuncDecl MkTreeOrder(Sort s, uint id)
+        {
+            var fn = Native.Z3_mk_tree_order(nCtx, s.NativeObject, id);
+            return new FuncDecl(this, fn);
+        }
+
         #endregion
 
         #region Bound Variables

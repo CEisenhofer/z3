@@ -553,6 +553,10 @@ public:
     void user_propagate_register_fixed(user_propagator::fixed_eh_t& fixed_eh) override {
         ensure_euf()->user_propagate_register_fixed(fixed_eh);
     }
+
+    void user_propagate_register_bound(user_propagator::bound_eh_t& bound_eh) override {
+        ensure_euf()->user_propagate_register_bound(bound_eh);
+    }
     
     void user_propagate_register_final(user_propagator::final_eh_t& final_eh) override {
         ensure_euf()->user_propagate_register_final(final_eh);

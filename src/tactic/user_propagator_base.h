@@ -12,22 +12,32 @@ namespace user_propagator {
         virtual bool propagate_cb(unsigned num_fixed, expr* const* fixed_ids, unsigned num_eqs, expr* const* eq_lhs, expr* const* eq_rhs, expr* conseq) = 0;
         virtual void register_cb(expr* e) = 0;
         virtual bool next_split_cb(expr* e, unsigned idx, lbool phase) = 0;
+        virtual expr* get_lower_bound_cb(expr* e, bool& strict) = 0;
+        virtual expr* get_upper_bound_cb(expr* e, bool& strict) = 0;
     };
     
     class context_obj {
     public:
         virtual ~context_obj() = default;
     };
-    
-    typedef std::function<void(void*, callback*)>                            final_eh_t;
-    typedef std::function<void(void*, callback*, expr*, expr*)>              fixed_eh_t;
-    typedef std::function<void(void*, callback*, expr*, expr*)>              eq_eh_t;
-    typedef std::function<void*(void*, ast_manager&, context_obj*&)>         fresh_eh_t;
-    typedef std::function<void(void*, callback*)>                            push_eh_t;
-    typedef std::function<void(void*, callback*, unsigned)>                  pop_eh_t;
-    typedef std::function<void(void*, callback*, expr*)>                     created_eh_t;
-    typedef std::function<void(void*, callback*, expr*, unsigned, bool)>     decide_eh_t;
-    typedef std::function<void(void*, expr*, unsigned, unsigned const*, unsigned, expr* const*)>        on_clause_eh_t;
+
+    typedef enum {
+        BOUND_LT,
+        BOUND_LE,
+        BOUND_GT,
+        BOUND_GE
+    } bound_kind_t;
+
+    typedef std::function<void(void*, callback*)>                             final_eh_t;
+    typedef std::function<void(void*, callback*, expr*, expr*)>               fixed_eh_t;
+    typedef std::function<void(void*, callback*, expr*, expr*)>               eq_eh_t;
+    typedef std::function<void*(void*, ast_manager&, context_obj*&)>          fresh_eh_t;
+    typedef std::function<void(void*, callback*)>                             push_eh_t;
+    typedef std::function<void(void*, callback*, unsigned)>                   pop_eh_t;
+    typedef std::function<void(void*, callback*, expr*)>                      created_eh_t;
+    typedef std::function<void(void*, callback*, expr*, unsigned, bool)>      decide_eh_t;
+    typedef std::function<void(void*, callback*, expr*, expr*, bound_kind_t)> bound_eh_t;
+    typedef std::function<void(void*, expr*, unsigned, unsigned const*, unsigned, expr* const*)> on_clause_eh_t;
 
     class plugin : public decl_plugin {
     public:
@@ -67,7 +77,11 @@ namespace user_propagator {
         virtual void user_propagate_register_fixed(fixed_eh_t& fixed_eh) {
             throw default_exception("user-propagators are only supported on the SMT solver");
         }
-        
+
+        virtual void user_propagate_register_bound(bound_eh_t& bound_eh) {
+            throw default_exception("user-propagators are only supported on the SMT solver");
+        }
+
         virtual void user_propagate_register_final(final_eh_t& final_eh) {
             throw default_exception("user-propagators are only supported on the SMT solver");
         }

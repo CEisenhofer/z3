@@ -385,6 +385,7 @@ public:
         s->user_propagate_init(ctx, push_eh, pop_eh, fresh_eh);
     }        
     void user_propagate_register_fixed(user_propagator::fixed_eh_t& fixed_eh) override { s->user_propagate_register_fixed(fixed_eh); }    
+    void user_propagate_register_bound(user_propagator::bound_eh_t& bound_eh) override { s->user_propagate_register_bound(bound_eh); }
     void user_propagate_register_final(user_propagator::final_eh_t& final_eh) override { s->user_propagate_register_final(final_eh); }
     void user_propagate_register_eq(user_propagator::eq_eh_t& eq_eh) override { s->user_propagate_register_eq(eq_eh); }    
     void user_propagate_register_diseq(user_propagator::eq_eh_t& diseq_eh) override { s->user_propagate_register_diseq(diseq_eh); }    

@@ -552,7 +552,7 @@ def type2javaw(ty):
 def param2java(p):
     k = param_kind(p)
     if k == OUT:
-        if param_type(p) == INT or param_type(p) == UINT:
+        if param_type(p) == INT or param_type(p) == UINT or param_type(p) == BOOL:
             return "IntPtr"
         elif param_type(p) == INT64 or param_type(p) == UINT64 or param_type(p) == VOID_PTR or param_type(p) >= FIRST_OBJ_ID:
             return "LongPtr"
@@ -1079,6 +1079,9 @@ def def_API(name, result, params):
             elif ty == INT64:
                 log_c.write("  I(0);\n")
                 exe_c.write("in.get_int64_addr(%s)" % i)
+            elif ty == BOOL:
+                log_c.write("  I(0);\n")
+                exe_c.write("in.get_bool_addr(%s)" % i)
             elif ty == VOID_PTR:
                 log_c.write("  P(0);\n")
                 exe_c.write("in.get_obj_addr(%s)" % i)

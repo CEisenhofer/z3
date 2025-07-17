@@ -3148,6 +3148,20 @@ public:
         inf_rational value = b.get_value(is_true);
         if (propagate_eqs() && value.is_rational()) 
             propagate_eqs(b.column_index(), ci, k, b, value.get_rational());
+        //  TODO: Not optimal; first check if UP is attached at all
+        enode* e = get_enode(b.get_var());
+        if (ctx().watches_bounds(e)) {
+            user_propagator::bound_kind_t kind;
+            if (k == lp::LT)
+                kind = user_propagator::bound_kind_t::BOUND_LT;
+            else if (k == lp::LE)
+                kind = user_propagator::bound_kind_t::BOUND_LE;
+            else if (k == lp::GT)
+                kind = user_propagator::bound_kind_t::BOUND_GT;
+            else
+                kind = user_propagator::bound_kind_t::BOUND_GE;
+            ctx().assign_bound(e, a.mk_numeral(value.get_rational(), b.is_int()), kind);
+        }
         return true;
 #if 0
         if (should_propagate())

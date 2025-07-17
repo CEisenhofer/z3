@@ -1430,6 +1430,20 @@ typedef enum
 Z3_DECLARE_CLOSURE(Z3_error_handler, void, (Z3_context c, Z3_error_code e));
 
 /**
+   \brief Description of bounds issued by the user-propagator
+
+   - Z3_BOUND_LT:    The given expression is strictly less than the given bound.
+   - Z3_BOUND_GT:    The given expression is strictly greater than the given bound.
+*/
+typedef enum
+{
+    Z3_BOUND_LT,
+    Z3_BOUND_LE,
+    Z3_BOUND_GT,
+    Z3_BOUND_GE
+} Z3_bound_kind;
+
+/**
    \brief callback functions for user propagator.
 */
 Z3_DECLARE_CLOSURE(Z3_push_eh,    void, (void* ctx, Z3_solver_callback cb));
@@ -1440,8 +1454,8 @@ Z3_DECLARE_CLOSURE(Z3_eq_eh,      void, (void* ctx, Z3_solver_callback cb, Z3_as
 Z3_DECLARE_CLOSURE(Z3_final_eh,   void, (void* ctx, Z3_solver_callback cb));
 Z3_DECLARE_CLOSURE(Z3_created_eh, void, (void* ctx, Z3_solver_callback cb, Z3_ast t));
 Z3_DECLARE_CLOSURE(Z3_decide_eh,  void, (void* ctx, Z3_solver_callback cb, Z3_ast t, unsigned idx, bool phase));
+Z3_DECLARE_CLOSURE(Z3_bound_eh,  void, (void* ctx, Z3_solver_callback cb, Z3_ast t, Z3_ast value, Z3_bound_kind kind));
 Z3_DECLARE_CLOSURE(Z3_on_clause_eh, void, (void* ctx, Z3_ast proof_hint, unsigned n, unsigned const* deps, Z3_ast_vector literals));
-
 
 /**
    \brief A Goal is essentially a set of formulas.
@@ -7226,6 +7240,14 @@ extern "C" {
     void Z3_API Z3_solver_propagate_decide(Z3_context c, Z3_solver s, Z3_decide_eh decide_eh);
 
     /**
+       \brief register a callback when the solver finds a bound on a registered arithmetic expression.
+       There is no guarantee that the bound is tight or that no bounds are missed.
+
+       def_API('Z3_solver_propagate_bound', VOID, (_in(CONTEXT), _in(SOLVER), _fnptr(Z3_bound_eh)))
+    */
+    void Z3_API Z3_solver_propagate_bound(Z3_context c, Z3_solver s, Z3_bound_eh bound_eh);
+
+    /**
         Sets the next (registered) expression to split on.
         The function returns false and ignores the given expression in case the expression is already assigned internally
         (due to relevancy propagation, this assignments might not have been reported yet by the fixed callback).
@@ -7291,6 +7313,29 @@ extern "C" {
 
     bool Z3_API Z3_solver_propagate_consequence(Z3_context c, Z3_solver_callback cb, unsigned num_fixed, Z3_ast const* fixed, unsigned num_eqs, Z3_ast const* eq_lhs, Z3_ast const* eq_rhs, Z3_ast conseq);
 
+    /**
+       \brief gets the lower bound of the given arithmetic expression. Returns null iff there is no bound to query.
+
+       \param c - context
+       \param solver_cb - solver callback
+       \param e - the arithmetic expression to query bounds for
+       \param is_strict - true if the bound is strict (less vs. less-equal)
+
+       def_API('Z3_solver_get_lower_bound', AST, (_in(CONTEXT), _in(SOLVER_CALLBACK), _in(AST), _out(BOOL)))
+    */
+    Z3_ast Z3_API Z3_solver_get_lower_bound(Z3_context c, Z3_solver_callback cb, Z3_ast e, bool* is_strict);
+
+    /**
+       \brief gets the upper bound of the given arithmetic expression. Returns null iff there is no bound to query.
+
+       \param c - context
+       \param solver_cb - solver callback
+       \param e - the arithmetic expression to query bounds for
+       \param is_strict - true if the bound is strict (greater vs. greater-equal)
+
+       def_API('Z3_solver_get_upper_bound', AST, (_in(CONTEXT), _in(SOLVER_CALLBACK), _in(AST), _out(BOOL)))
+    */
+    Z3_ast Z3_API Z3_solver_get_upper_bound(Z3_context c, Z3_solver_callback cb, Z3_ast e, bool* is_strict);
 
     /**
        \brief provide an initialization hint to the solver. The initialization hint is used to calibrate an initial value of the expression that

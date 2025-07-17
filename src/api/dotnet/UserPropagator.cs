@@ -64,7 +64,13 @@ namespace Microsoft.Z3
         /// <param name="idx">If the term is a bit-vector, then an index into the bit-vector being branched on</param>
         /// <param name="phase">The tentative truth-value</param>
         public delegate void DecideEh(Expr term, uint idx, bool phase);
-        
+
+        /// <summary>
+        /// Delegate type for bound callback
+        /// The reported bounds are neither required to be strict nor complete
+        /// </summary>
+        public delegate void BoundEh(Expr term, Expr value, Z3_bound_kind kind);
+
         // access managed objects through a static array.
         // thread safety is ignored for now.
         GCHandle gch;
@@ -78,6 +84,7 @@ namespace Microsoft.Z3
         EqEh diseq_eh;
         CreatedEh created_eh;
         DecideEh decide_eh;
+        BoundEh bound_eh;
 
         Native.Z3_push_eh push_eh;
         Native.Z3_pop_eh pop_eh;
@@ -89,6 +96,7 @@ namespace Microsoft.Z3
         Native.Z3_eq_eh diseq_wrapper;
         Native.Z3_decide_eh decide_wrapper;
         Native.Z3_created_eh created_wrapper;
+        Native.Z3_bound_eh bound_wrapper;
 
         void Callback(Action fn, Z3_solver_callback cb)
         {
@@ -173,6 +181,14 @@ namespace Microsoft.Z3
             var prop = (UserPropagator)GCHandle.FromIntPtr(ctx).Target;
             using var t = Expr.Create(prop.ctx, a);
             prop.Callback(() => prop.decide_eh(t, idx, phase), cb);
+        }
+
+        static void _bound(voidp ctx, Z3_solver_callback cb, Z3_ast _term, Z3_ast _value, Z3_bound_kind kind)
+        {
+            var prop = (UserPropagator)GCHandle.FromIntPtr(ctx).Target;
+            using var term = Expr.Create(prop.ctx, _term);
+            using var value = Expr.Create(prop.ctx, _value);
+            prop.Callback(() => prop.bound_eh(term, value, kind), cb);
         }
 
         /// <summary>
@@ -359,6 +375,20 @@ namespace Microsoft.Z3
                 this.decide_eh = value;
                 if (solver != null)
                     Native.Z3_solver_propagate_decide(ctx.nCtx, solver.NativeObject, decide_wrapper);
+            }
+        }
+
+        /// <summary>
+        /// Set bound callback
+        /// </summary>
+        public BoundEh Bound
+        {
+            set
+            {
+                this.bound_wrapper = _bound;
+                this.bound_eh = value;
+                if (solver != null)
+                    Native.Z3_solver_propagate_bound(ctx.nCtx, solver.NativeObject, bound_wrapper);
             }
         }
 

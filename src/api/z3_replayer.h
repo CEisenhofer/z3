@@ -57,6 +57,7 @@ public:
     int64_t * get_int64_addr(unsigned pos);
     unsigned * get_uint_addr(unsigned pos);
     uint64_t * get_uint64_addr(unsigned pos);
+    bool* get_bool_addr(unsigned pos);
     Z3_string * get_str_addr(unsigned pos);
     void ** get_obj_addr(unsigned pos);
 

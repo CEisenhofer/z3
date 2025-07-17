@@ -16,7 +16,6 @@ Author:
 Revision History:
 
 --*/
-#include<math.h>
 #include "util/luby.h"
 #include "util/warning.h"
 #include "util/timeit.h"
@@ -27,13 +26,10 @@ Revision History:
 #include "ast/ast_translation.h"
 #include "ast/recfun_decl_plugin.h"
 #include "ast/proofs/proof_checker.h"
-#include "ast/ast_util.h"
 #include "ast/well_sorted.h"
 #include "model/model_params.hpp"
-#include "model/model.h"
 #include "model/model_pp.h"
 #include "smt/smt_context.h"
-#include "smt/smt_quick_checker.h"
 #include "smt/uses_theory.h"
 #include "smt/theory_special_relations.h"
 #include "smt/theory_polymorphism.h"
@@ -41,9 +37,8 @@ Revision History:
 #include "smt/smt_for_each_relevant_expr.h"
 #include "smt/smt_model_generator.h"
 #include "smt/smt_model_checker.h"
-#include "smt/smt_model_finder.h"
 #include "smt/smt_parallel.h"
-#include "smt/smt_arith_value.h"
+#include "smt/theory_user_propagator.h"
 #include <iostream>
 
 namespace smt {
@@ -2922,6 +2917,54 @@ namespace smt {
         register_plugin(m_user_propagator);
     }
 
+    void context::user_propagate_register_final(user_propagator::final_eh_t& final_eh) {
+        if (!m_user_propagator)
+            throw default_exception("user propagator must be initialized");
+        m_user_propagator->register_final(final_eh);
+    }
+
+    void context::user_propagate_register_fixed(user_propagator::fixed_eh_t& fixed_eh) {
+        if (!m_user_propagator)
+            throw default_exception("user propagator must be initialized");
+        m_user_propagator->register_fixed(fixed_eh);
+    }
+
+    void context::user_propagate_register_bound(user_propagator::bound_eh_t& bound_eh) {
+        if (!m_user_propagator)
+            throw default_exception("user propagator must be initialized");
+        m_user_propagator->register_bound(bound_eh);
+    }
+
+    void context::user_propagate_register_eq(user_propagator::eq_eh_t& eq_eh) {
+        if (!m_user_propagator)
+            throw default_exception("user propagator must be initialized");
+        m_user_propagator->register_eq(eq_eh);
+    }
+
+    void context::user_propagate_register_diseq(user_propagator::eq_eh_t& diseq_eh) {
+        if (!m_user_propagator)
+            throw default_exception("user propagator must be initialized");
+        m_user_propagator->register_diseq(diseq_eh);
+    }
+
+    void context::user_propagate_register_expr(expr* e) {
+        if (!m_user_propagator)
+            throw default_exception("user propagator must be initialized");
+        m_user_propagator->add_expr(e, true);
+    }
+
+    void context::user_propagate_register_created(user_propagator::created_eh_t& r) {
+        if (!m_user_propagator)
+            throw default_exception("user propagator must be initialized");
+        m_user_propagator->register_created(r);
+    }
+
+    void context::user_propagate_register_decide(user_propagator::decide_eh_t& r) {
+        if (!m_user_propagator)
+            throw default_exception("user propagator must be initialized");
+        m_user_propagator->register_decide(r);
+    }
+
     void context::user_propagate_initialize_value(expr* var, expr* value) {
         m_values.push_back({expr_ref(var, m), expr_ref(value, m)});
         push_trail(push_back_vector(m_values));
@@ -2963,6 +3006,10 @@ namespace smt {
         return m_user_propagator && m_user_propagator->has_fixed() && n->get_th_var(m_user_propagator->get_family_id()) != null_theory_var;
     }
 
+    bool context::watches_bounds(enode* n) const {
+        return m_user_propagator && m_user_propagator->has_bound() && n->get_th_var(m_user_propagator->get_family_id()) != null_theory_var;
+    }
+
     bool context::has_split_candidate(bool_var& var, bool& is_pos) {
         if (!m_user_propagator)
             return false;
@@ -2982,6 +3029,11 @@ namespace smt {
     void context::assign_fixed(enode* n, expr* val, unsigned sz, literal const* explain) {
         theory_var v = n->get_th_var(m_user_propagator->get_family_id());
         m_user_propagator->new_fixed_eh(v, val, sz, explain);
+    }
+
+    void context::assign_bound(enode* n, expr* val, user_propagator::bound_kind_t kind) {
+        theory_var v = n->get_th_var(m_user_propagator->get_family_id());
+        m_user_propagator->new_bound_eh(v, val, kind);
     }
 
     bool context::is_fixed(enode* n, expr_ref& val, literal_vector& explain) {

@@ -46,7 +46,6 @@ Revision History:
 #include "util/statistics.h"
 #include "smt/fingerprints.h"
 #include "smt/proto_model/proto_model.h"
-#include "smt/theory_user_propagator.h"
 #include "model/model.h"
 #include "solver/progress_callback.h"
 #include "solver/assertions/asserted_formulas.h"
@@ -62,6 +61,7 @@ namespace smt {
 
     class model_generator;
     class context;
+    class theory_user_propagator;
 
     struct oom_exception : public z3_error {
         oom_exception() : z3_error(ERR_MEMOUT) {}
@@ -1768,51 +1768,26 @@ namespace smt {
             user_propagator::pop_eh_t&     pop_eh,
             user_propagator::fresh_eh_t&   fresh_eh);
 
-        void user_propagate_register_final(user_propagator::final_eh_t& final_eh) {
-            if (!m_user_propagator) 
-                throw default_exception("user propagator must be initialized");
-            m_user_propagator->register_final(final_eh);
-        }
+        void user_propagate_register_final(user_propagator::final_eh_t& final_eh);
 
-        void user_propagate_register_fixed(user_propagator::fixed_eh_t& fixed_eh) {
-            if (!m_user_propagator) 
-                throw default_exception("user propagator must be initialized");
-            m_user_propagator->register_fixed(fixed_eh);
-        }
+        void user_propagate_register_fixed(user_propagator::fixed_eh_t& fixed_eh);
+
+        void user_propagate_register_bound(user_propagator::bound_eh_t& bound_eh);
+
+        void user_propagate_register_eq(user_propagator::eq_eh_t& eq_eh);
         
-        void user_propagate_register_eq(user_propagator::eq_eh_t& eq_eh) {
-            if (!m_user_propagator) 
-                throw default_exception("user propagator must be initialized");
-            m_user_propagator->register_eq(eq_eh);
-        }
-        
-        void user_propagate_register_diseq(user_propagator::eq_eh_t& diseq_eh) {
-            if (!m_user_propagator) 
-                throw default_exception("user propagator must be initialized");
-            m_user_propagator->register_diseq(diseq_eh);
-        }
+        void user_propagate_register_diseq(user_propagator::eq_eh_t& diseq_eh);
 
-        void user_propagate_register_expr(expr* e) {
-            if (!m_user_propagator) 
-                throw default_exception("user propagator must be initialized");
-            m_user_propagator->add_expr(e, true);
-        }
+        void user_propagate_register_expr(expr* e);
 
-        void user_propagate_register_created(user_propagator::created_eh_t& r) {
-            if (!m_user_propagator)
-                throw default_exception("user propagator must be initialized");
-            m_user_propagator->register_created(r);
-        }
+        void user_propagate_register_created(user_propagator::created_eh_t& r);
 
-        void user_propagate_register_decide(user_propagator::decide_eh_t& r) {
-            if (!m_user_propagator)
-                throw default_exception("user propagator must be initialized");
-            m_user_propagator->register_decide(r);
-        }
+        void user_propagate_register_decide(user_propagator::decide_eh_t& r);
 
         void user_propagate_initialize_value(expr* var, expr* value);
 
         bool watches_fixed(enode* n) const;
+        bool watches_bounds(enode* n) const;
 
         bool has_split_candidate(bool_var& var, bool& is_pos);
         
@@ -1827,6 +1802,8 @@ namespace smt {
         void assign_fixed(enode* n, expr* val, literal explain) {
             assign_fixed(n, val, 1, &explain);
         }
+
+        void assign_bound(enode* n, expr* val, user_propagator::bound_kind_t kind);
 
         bool is_fixed(enode* n, expr_ref& val, literal_vector& explain);
 

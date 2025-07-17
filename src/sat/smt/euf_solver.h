@@ -538,6 +538,10 @@ namespace euf {
             check_for_user_propagator();
             m_user_propagator->register_fixed(fixed_eh);
         }
+        void user_propagate_register_bound(user_propagator::bound_eh_t& bound_eh) {
+            check_for_user_propagator();
+            m_user_propagator->register_bound(bound_eh);
+        }
         void user_propagate_register_eq(user_propagator::eq_eh_t& eq_eh) {
             check_for_user_propagator();
             m_user_propagator->register_eq(eq_eh);

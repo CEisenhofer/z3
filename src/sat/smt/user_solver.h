@@ -134,6 +134,7 @@ namespace user_solver {
 
         void register_final(user_propagator::final_eh_t& final_eh) { m_final_eh = final_eh; }
         void register_fixed(user_propagator::fixed_eh_t& fixed_eh) { m_fixed_eh = fixed_eh; }
+        void register_bound(user_propagator::bound_eh_t& bound_eh) { NOT_IMPLEMENTED_YET(); }
         void register_eq(user_propagator::eq_eh_t& eq_eh) { m_eq_eh = eq_eh; }
         void register_diseq(user_propagator::eq_eh_t& diseq_eh) { m_diseq_eh = diseq_eh; }
         void register_created(user_propagator::created_eh_t& created_eh) { m_created_eh = created_eh; }
@@ -144,6 +145,8 @@ namespace user_solver {
         bool propagate_cb(unsigned num_fixed, expr* const* fixed_ids, unsigned num_eqs, expr* const* lhs, expr* const* rhs, expr* conseq) override;
         void register_cb(expr* e) override;
         bool next_split_cb(expr* e, unsigned idx, lbool phase) override;
+        expr* get_lower_bound_cb(expr* e, bool& strict) override { NOT_IMPLEMENTED_YET(); return nullptr; }
+        expr* get_upper_bound_cb(expr* e, bool& strict) override { NOT_IMPLEMENTED_YET(); return nullptr; }
 
         void new_fixed_eh(euf::theory_var v, expr* value, unsigned num_lits, sat::literal const* jlits);
 

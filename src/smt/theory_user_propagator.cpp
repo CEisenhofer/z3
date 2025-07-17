@@ -28,8 +28,10 @@ theory_user_propagator::theory_user_propagator(context& ctx):
     theory(ctx, ctx.get_manager().mk_family_id(user_propagator::plugin::name())),
     m_var2expr(ctx.get_manager()),
     m_push_popping(false),
-    m_to_add(ctx.get_manager())
-{}
+    m_to_add(ctx.get_manager()),
+    m_arith_value(ctx.get_manager()),
+    a(ctx.get_manager())
+{ }
 
 theory_user_propagator::~theory_user_propagator() {
     dealloc(m_api_context);
@@ -129,6 +131,20 @@ bool theory_user_propagator::next_split_cb(expr* e, unsigned idx, lbool phase) {
     return true;
 }
 
+expr* theory_user_propagator::get_lower_bound_cb(expr* e, bool& strict) {
+    rational rat;
+    if (!m_arith_value.get_lo_equiv(e, rat, strict))
+        return nullptr;
+    return a.mk_numeral(rat, e->get_sort());
+}
+
+expr* theory_user_propagator::get_upper_bound_cb(expr* e, bool& strict) {
+    rational rat;
+    if (!m_arith_value.get_up_equiv(e, rat, strict))
+        return nullptr;
+    return a.mk_numeral(rat, e->get_sort());
+}
+
 theory * theory_user_propagator::mk_fresh(context * new_ctx) {
     auto* th = alloc(theory_user_propagator, *new_ctx);
     void* ctx;
@@ -205,10 +221,10 @@ void theory_user_propagator::decide(bool_var& var, bool& is_pos) {
     if (!d.is_enode() && !d.is_theory_atom())
         return;
 
-    enode* original_enode = nullptr;
+    enode* original_enode;
     unsigned original_bit = 0;
     bv_util bv(m);
-    theory* th = nullptr;
+    theory* th;
     theory_var v = null_theory_var;
 
     // get the associated theory
@@ -411,6 +427,10 @@ void theory_user_propagator::replay_clause(expr_ref_vector const& clause) {
     ctx.mk_th_axiom(get_id(), m_lits);
 }
 
+void theory_user_propagator::init() {
+    m_arith_value.init(&ctx);
+}
+
 bool theory_user_propagator::internalize_atom(app* atom, bool gate_ctx) {
     return internalize_term(atom);
 }
@@ -434,6 +454,18 @@ bool theory_user_propagator::internalize_term(app* term) {
     }
 
     return true;
+}
+
+void theory_user_propagator::new_bound_eh(theory_var v, expr* value, user_propagator::bound_kind_t kind) {
+    if (!m_bound_eh)
+        return;
+    force_push();
+    try {
+        m_bound_eh(m_user_context, this, var2expr(v), value, kind);
+    }
+    catch (...) {
+        throw default_exception("Exception thrown in \"bound\"-callback");
+    }
 }
 
 void theory_user_propagator::collect_statistics(::statistics& st) const {

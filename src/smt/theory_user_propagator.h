@@ -23,6 +23,7 @@ Notes:
 #pragma once
 
 #include "util/uint_set.h"
+#include "smt/smt_arith_value.h"
 #include "smt/smt_theory.h"
 #include "solver/solver.h"
 
@@ -66,29 +67,32 @@ namespace smt {
         user_propagator::eq_eh_t        m_diseq_eh;
         user_propagator::created_eh_t   m_created_eh;
         user_propagator::decide_eh_t    m_decide_eh;
+        user_propagator::bound_eh_t     m_bound_eh;
 
         user_propagator::context_obj*   m_api_context = nullptr;
-        unsigned               m_qhead = 0;
-        uint_set               m_fixed;
-        vector<prop_info>      m_prop;
-        unsigned_vector        m_prop_lim;
-        vector<literal_vector> m_id2justification;
-        unsigned               m_num_scopes = 0;
-        literal_vector         m_lits;
-        enode_pair_vector      m_eqs;
-        stats                  m_stats;
-        expr_ref_vector        m_var2expr;
-        unsigned_vector        m_expr2var;
-        bool                   m_push_popping;
-        expr_ref_vector        m_to_add;
-        unsigned_vector        m_to_add_lim;
-        unsigned               m_to_add_qhead = 0;
-        expr*                  m_next_split_var = nullptr;
-        unsigned               m_next_split_idx = 0;
-        lbool                  m_next_split_phase = l_undef;
+        unsigned                m_qhead = 0;
+        uint_set                m_fixed;
+        vector<prop_info>       m_prop;
+        unsigned_vector         m_prop_lim;
+        vector<literal_vector>  m_id2justification;
+        unsigned                m_num_scopes = 0;
+        literal_vector          m_lits;
+        enode_pair_vector       m_eqs;
+        stats                   m_stats;
+        expr_ref_vector         m_var2expr;
+        unsigned_vector         m_expr2var;
+        bool                    m_push_popping;
+        expr_ref_vector         m_to_add;
+        unsigned_vector         m_to_add_lim;
+        unsigned                m_to_add_qhead = 0;
+        expr*                   m_next_split_var = nullptr;
+        unsigned                m_next_split_idx = 0;
+        lbool                   m_next_split_phase = l_undef;
+        arith_value             m_arith_value;
+        arith_util              a;
         vector<expr_ref_vector> m_clauses_to_replay;
         unsigned                m_replay_qhead = 0;
-        obj_hashtable<expr>   m_add_expr_fresh;
+        obj_hashtable<expr>     m_add_expr_fresh;
 
         expr* var2expr(theory_var v) { return m_var2expr.get(v); }
         theory_var expr2var(expr* e) { check_defined(e); return m_expr2var[e->get_id()]; }
@@ -132,12 +136,16 @@ namespace smt {
         void register_diseq(user_propagator::eq_eh_t& diseq_eh) { m_diseq_eh = diseq_eh; }
         void register_created(user_propagator::created_eh_t& created_eh) { m_created_eh = created_eh; }
         void register_decide(user_propagator::decide_eh_t& decide_eh) { m_decide_eh = decide_eh; }
+        void register_bound(user_propagator::bound_eh_t& bound_eh) { m_bound_eh = bound_eh; }
 
         bool has_fixed() const { return (bool)m_fixed_eh; }
-        
+        bool has_bound() const { return (bool)m_bound_eh; }
+
         bool propagate_cb(unsigned num_fixed, expr* const* fixed_ids, unsigned num_eqs, expr* const* lhs, expr* const* rhs, expr* conseq) override;
         void register_cb(expr* e) override;
         bool next_split_cb(expr* e, unsigned idx, lbool phase) override;
+        expr* get_lower_bound_cb(expr* e, bool& strict) override;
+        expr* get_upper_bound_cb(expr* e, bool& strict) override;
 
         void new_fixed_eh(theory_var v, expr* value, unsigned num_lits, literal const* jlits);
         void decide(bool_var& var, bool& is_pos);
@@ -145,11 +153,13 @@ namespace smt {
 
         theory * mk_fresh(context * new_ctx) override;
         char const* get_name() const override { return "user_propagate"; }
+        void init() override;
         bool internalize_atom(app* atom, bool gate_ctx) override;
         bool internalize_term(app* term) override;
         void new_eq_eh(theory_var v1, theory_var v2) override { if (m_eq_eh) force_push(), m_eq_eh(m_user_context, this, var2expr(v1), var2expr(v2)); }
         void new_diseq_eh(theory_var v1, theory_var v2) override { if (m_diseq_eh) force_push(), m_diseq_eh(m_user_context, this, var2expr(v1), var2expr(v2)); }
         bool use_diseqs() const override { return ((bool)m_diseq_eh); }
+        void new_bound_eh(theory_var v, expr* value, user_propagator::bound_kind_t kind);
         bool build_models() const override { return false; }
         final_check_status final_check_eh() override;
         void reset_eh() override {}
