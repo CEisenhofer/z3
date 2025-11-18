@@ -439,7 +439,7 @@ bool theory_user_propagator::internalize_term(app* term) {
     for (auto arg : *term)
         ensure_enode(arg);
     if (term->get_family_id() == get_id() && !ctx.e_internalized(term)) 
-        ctx.mk_enode(term, true, false, true);
+        ctx.mk_enode(term, false, false, true);
     
     add_expr(term, false);
     
